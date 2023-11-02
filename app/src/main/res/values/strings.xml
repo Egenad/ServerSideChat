@@ -1,3 +1,13 @@
 <resources>
     <string name="app_name">ServerSideChat</string>
+    <string name="actual_ip">Dirección IP: </string>
+    <string name="actual_port">Puerto: </string>
+    <string name="waiting_cnt">Esperando conexiones entrantes...</string>
+    <string name="server_ip">Dirección IP del servidor</string>
+    <string name="port">Puerto</string>
+    <string name="connect">Conectar</string>
+    <string name="empty_fields">Por favor, rellena ambos campos</string>
+    <string name="message">Mensaje</string>
+    <string name="send">Enviar</string>
+    <string name="nullValue" translatable="false">Null</string>
 </resources>

@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <integer name="server_port">8080</integer>
+    <integer name="server_port">8081</integer>
 </resources>

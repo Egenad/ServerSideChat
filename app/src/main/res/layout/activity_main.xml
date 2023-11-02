@@ -4,15 +4,91 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:id="@+id/body"
+    android:background="#272E53"
     tools:context=".MainActivity">
+
+    <TextView
+        android:id="@+id/ipAddress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textStyle="bold"
+        android:textColor="@color/white"
+        android:text="@string/actual_ip"
+        android:layout_marginTop="30dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+    <TextView
+        android:id="@+id/portAddress"
+        android:layout_width="wrap_content"
+        android:textStyle="bold"
+        android:textColor="@color/white"
+        android:layout_height="wrap_content"
+        android:text="@string/actual_port"
+        android:layout_marginTop="10dp"
+        app:layout_constraintTop_toBottomOf="@+id/ipAddress"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Hello World!"
+        android:text="@string/waiting_cnt"
+        android:textColor="#8F9FF4"
+        android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <androidx.fragment.app.FragmentContainerView
+        android:name="es.ua.eps.serversidechat.fragment.MessageListFragment"
+        android:id="@+id/list_fragment"
+        android:layout_weight="1"
+        android:visibility="invisible"
+        app:layout_constraintStart_toStartOf="@id/body"
+        app:layout_constraintEnd_toEndOf="@id/body"
+        android:layout_marginTop="20dp"
+        app:layout_constraintTop_toBottomOf="@id/portAddress"
+        app:layout_constraintBottom_toTopOf="@id/linearLayout1"
+        android:layout_width="match_parent"
+        android:background="#191D37"
+        android:layout_height="0dip" />
+
+    <LinearLayout
+        android:id="@+id/linearLayout1"
+        app:layout_constraintTop_toBottomOf="@id/list_fragment"
+        app:layout_constraintBottom_toBottomOf="@id/body"
+        app:layout_constraintStart_toStartOf="@id/body"
+        app:layout_constraintEnd_toEndOf="@id/body"
+        android:orientation="horizontal"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:paddingLeft="5dp"
+        android:visibility="invisible"
+        android:background="#454F81"
+        android:paddingRight="5dp"
+        android:paddingBottom="5dp"
+        android:baselineAligned="true">
+        <EditText android:layout_weight="4"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="10dp"
+            android:id="@+id/textInput"
+            android:importantForAutofill="no"
+            android:inputType="text"
+            android:textColorHint="#ADB9FA"
+            android:hint="@string/message"
+            android:textColor="@color/white"
+            android:layout_height="match_parent"
+            android:layout_width="0dip">
+        </EditText>
+        <androidx.appcompat.widget.AppCompatButton
+            android:text="@string/send"
+            android:layout_weight="1"
+            android:layout_width="0dip"
+            android:layout_height="match_parent"
+            android:id="@+id/btnSend"/>
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
