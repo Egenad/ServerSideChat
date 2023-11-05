@@ -1,14 +1,19 @@
 package es.ua.eps.serversidechat.adapter
 
 import android.graphics.Color
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import es.ua.eps.serversidechat.PACKAGE_NAME
 import es.ua.eps.serversidechat.R
 import es.ua.eps.serversidechat.utils.Message
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 const val OUT_MESSAGE = 0
 const val IN_MESSAGE = 1
@@ -79,11 +84,23 @@ class RecycledAdapter(val messageList: List<Message>) :
     open class ViewHolder(v: View) : RecyclerView.ViewHolder(v) {
         private var author: TextView?
         private var content: TextView
+        private var time: TextView
         private val view = v
 
         fun bind(it: Message) {
             author?.text = it.authorName
             content.text = it.content
+
+            var dateString = ""
+
+            try{
+                val format = SimpleDateFormat("HH:mm", Locale.US)
+                dateString = format.format(it.date ?: Date())
+            }catch (error : Exception){
+                Log.e(PACKAGE_NAME, error.stackTraceToString())
+            }
+
+            time.text = dateString
 
             if(it.type == IN_MESSAGE)
                 author?.setTextColor(Color.parseColor(it.color))
@@ -92,6 +109,7 @@ class RecycledAdapter(val messageList: List<Message>) :
         init {
             author = view.findViewById(R.id.author)
             content = view.findViewById(R.id.content)
+            time = view.findViewById(R.id.time)
         }
     }
 

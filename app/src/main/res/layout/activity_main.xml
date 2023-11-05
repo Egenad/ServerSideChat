@@ -46,7 +46,6 @@
         android:name="es.ua.eps.serversidechat.fragment.MessageListFragment"
         android:id="@+id/list_fragment"
         android:layout_weight="1"
-        android:visibility="invisible"
         app:layout_constraintStart_toStartOf="@id/body"
         app:layout_constraintEnd_toEndOf="@id/body"
         android:layout_marginTop="20dp"
@@ -66,7 +65,6 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:paddingLeft="5dp"
-        android:visibility="invisible"
         android:background="#454F81"
         android:paddingRight="5dp"
         android:paddingBottom="5dp"
@@ -83,12 +81,13 @@
             android:layout_height="match_parent"
             android:layout_width="0dip">
         </EditText>
-        <androidx.appcompat.widget.AppCompatButton
-            android:text="@string/send"
+        <ImageButton
+            android:background="@drawable/sendmsgicon"
             android:layout_weight="1"
             android:layout_width="0dip"
-            android:layout_height="match_parent"
-            android:id="@+id/btnSend"/>
+            android:layout_height="wrap_content"
+            android:id="@+id/btnSend"
+            android:contentDescription="@string/sendMsgDsc" />
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
