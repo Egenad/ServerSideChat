@@ -21,7 +21,7 @@ object AESHelper {
     ): String {
         val plainText = textToEncrypt.toByteArray()
 
-        val cipher = Cipher.getInstance("AES/CBC/PKCS7PADDING")
+        val cipher = Cipher.getInstance("AES/ECB/PKCS7PADDING")
         cipher.init(Cipher.ENCRYPT_MODE, secretKey)
 
         val encrypt = cipher.doFinal(plainText)
@@ -34,7 +34,7 @@ object AESHelper {
     ): String {
         val textToDecrypt = Base64.decode(encryptedText, Base64.DEFAULT)
 
-        val cipher = Cipher.getInstance("AES/CBC/PKCS7PADDING")
+        val cipher = Cipher.getInstance("AES/ECB/PKCS7PADDING")
 
         cipher.init(Cipher.DECRYPT_MODE, secretKey)
 

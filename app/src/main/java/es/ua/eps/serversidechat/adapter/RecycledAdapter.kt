@@ -1,15 +1,19 @@
 package es.ua.eps.serversidechat.adapter
 
 import android.graphics.Color
+import android.graphics.drawable.BitmapDrawable
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.RecyclerView
 import es.ua.eps.serversidechat.PACKAGE_NAME
 import es.ua.eps.serversidechat.R
+import es.ua.eps.serversidechat.java.ContextBuilder
 import es.ua.eps.serversidechat.utils.Message
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -85,11 +89,14 @@ class RecycledAdapter(val messageList: List<Message>) :
         private var author: TextView?
         private var content: TextView
         private var time: TextView
+        private var image: ImageView?
+        private var constraint: ConstraintLayout?
         private val view = v
 
         fun bind(it: Message) {
             author?.text = it.authorName
             content.text = it.content
+            if(content.text.isBlank()) content.visibility = View.GONE
 
             var dateString = ""
 
@@ -98,6 +105,13 @@ class RecycledAdapter(val messageList: List<Message>) :
                 dateString = format.format(it.date ?: Date())
             }catch (error : Exception){
                 Log.e(PACKAGE_NAME, error.stackTraceToString())
+            }
+
+            if(it.image != null) {
+                image?.setImageDrawable(it.image)
+                constraint?.visibility = View.VISIBLE
+            }else{
+                constraint?.visibility = View.GONE
             }
 
             time.text = dateString
@@ -110,6 +124,8 @@ class RecycledAdapter(val messageList: List<Message>) :
             author = view.findViewById(R.id.author)
             content = view.findViewById(R.id.content)
             time = view.findViewById(R.id.time)
+            image = view.findViewById(R.id.imageView)
+            constraint = view.findViewById(R.id.constraint)
         }
     }
 

@@ -7,8 +7,10 @@
     <string name="port">Puerto</string>
     <string name="connect">Conectar</string>
     <string name="empty_fields">Por favor, rellena ambos campos</string>
+    <string name="sendMediaDsc">Enviar imagen</string>
     <string name="message">Mensaje</string>
     <string name="send">Enviar</string>
+    <string name="imgDsc">Imagen</string>
     <string name="nullValue" translatable="false">Null</string>
     <string name="sendMsgDsc" translatable="false">Enviar mensaje</string>
 </resources>

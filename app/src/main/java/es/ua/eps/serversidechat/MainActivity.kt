@@ -1,14 +1,24 @@
 package es.ua.eps.serversidechat
 
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
 import android.media.MediaPlayer
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.util.Base64
 import android.util.Log
 import android.view.View
+import androidx.activity.result.ActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.widget.doOnTextChanged
 import com.google.gson.Gson
 import es.ua.eps.serversidechat.adapter.OUT_MESSAGE
 import es.ua.eps.serversidechat.databinding.ActivityMainBinding
@@ -19,23 +29,25 @@ import es.ua.eps.serversidechat.utils.ClientKey
 import es.ua.eps.serversidechat.utils.Message
 import es.ua.eps.serversidechat.utils.MessageChatData
 import es.ua.eps.serversidechat.utils.RSAHelper
+import java.io.ByteArrayOutputStream
 import java.io.DataInputStream
 import java.io.DataOutputStream
+import java.io.FileNotFoundException
 import java.io.IOException
+import java.io.InputStream
 import java.net.NetworkInterface
 import java.net.ServerSocket
 import java.net.Socket
 import java.net.SocketException
 import java.security.KeyFactory
-import java.security.spec.RSAPublicKeySpec
 import java.security.spec.X509EncodedKeySpec
 import java.util.Date
-import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 
 
 const val PACKAGE_NAME = "es.ua.eps.server"
 const val PERMISSION_CODE = 101
+const val REQUEST_MEDIA_FILE = 1
 
 class MainActivity : AppCompatActivity() {
 
@@ -50,6 +62,12 @@ class MainActivity : AppCompatActivity() {
     private var mediaPlayer : MediaPlayer? = null                   // Clase que nos permite lanzar eventos de sonido
 
     private val serverClient : Client = Client()                    // Objeto de tipo Cliente que tiene dentro el nombre del servidor
+
+    private val startForResult =
+        registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
+            onActivityResult(REQUEST_MEDIA_FILE, result.resultCode, result.data)
+        }
 
     init {
         serverClient.name = "Server"
@@ -145,11 +163,73 @@ class MainActivity : AppCompatActivity() {
         binding.btnSend.setOnClickListener {
             if(binding.textInput.text.isNotBlank()){
                 // Enviamos el mensaje a todos los usuarios activos.
-                broadcastMsg(createMessage(binding.textInput.text.toString(), OUT_MESSAGE, serverClient))
+                val formatText = binding.textInput.text.toString().replace(Regex(" {2,}"), " ").trim()
+                broadcastMsg(createMessage(formatText, OUT_MESSAGE, serverClient), null)
                 // Lanzamos evento de audio.
                 startAudio(R.raw.send_message)
                 // Reseteamos el input de texto.
                 binding.textInput.setText("")
+            }
+        }
+
+        binding.textInput.doOnTextChanged { text, start, before, count ->
+            run {
+                if (text!!.isNotBlank()) {
+                    binding.btnSend.visibility = View.VISIBLE
+                    binding.btnSend.isEnabled = true
+                    binding.btnMedia.visibility = View.GONE
+                    binding.btnMedia.isEnabled = false
+                }else{
+                    binding.btnSend.visibility = View.GONE
+                    binding.btnSend.isEnabled = false
+                    binding.btnMedia.visibility = View.VISIBLE
+                    binding.btnMedia.isEnabled = true
+                }
+            }
+        }
+
+        // Generamos el binding del botón de enviar imágenes.
+        binding.btnMedia.setOnClickListener {
+            val mediaFileIntent = Intent(Intent.ACTION_GET_CONTENT).apply {
+                type = "image/*"
+            }
+            if (intent.resolveActivity(packageManager) != null) {
+                if(Build.VERSION.SDK_INT >= 30) {
+                    startForResult.launch(mediaFileIntent)
+                }
+                else
+                    @Suppress("DEPRECATION")
+                    startActivityForResult(mediaFileIntent, REQUEST_MEDIA_FILE)
+            }
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int,
+                                  data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (requestCode == REQUEST_MEDIA_FILE && resultCode == RESULT_OK){
+            val filePath: Uri? = data?.data
+
+            if(filePath != null) {
+                try {
+                    val inputStream: InputStream? = contentResolver.openInputStream(filePath)
+                    val bitmap = BitmapFactory.decodeStream(inputStream)
+                    Log.i(PACKAGE_NAME, bitmap.toString())
+                    if(bitmap != null) {
+                        broadcastMsg(
+                            createMessage(
+                                binding.textInput.text.toString(),
+                                OUT_MESSAGE,
+                                serverClient
+                            ),
+                            bitmap
+                        )
+                        startAudio(R.raw.send_message)
+                    }
+                } catch (e: FileNotFoundException) {
+                    e.printStackTrace()
+                }
             }
         }
     }
@@ -235,6 +315,7 @@ class MainActivity : AppCompatActivity() {
         private val connectedClient = client
 
         private var msgToSend : Message? = null
+        private var bitmapToSend : Bitmap? = null
 
         init {
             connectedClient.socket = hostThreadSocket
@@ -274,18 +355,40 @@ class MainActivity : AppCompatActivity() {
                 while(true){
                     if(inputStream.available() > 0){
                         val receivedMsg = inputStream.readUTF()
-                        val parsedMsg = Gson().fromJson(receivedMsg, Message::class.java)
+                        val decryptedMsg = AESHelper.decrypt(receivedMsg, secretKey)
+                        val parsedMsg = Gson().fromJson(decryptedMsg, Message::class.java)
                         parsedMsg.client = connectedClient
+
+                        if(parsedMsg.hasImage){
+                            val len = inputStream.readInt()
+                            val data = ByteArray(len)
+                            inputStream.readFully(data, 0, data.size)
+                            parsedMsg.image = parseImageByteArray(data)                             // Obtenemos el Drawable a mostrar a partir del bitmap
+                        }
+
                         Log.i(PACKAGE_NAME, "Message received: $receivedMsg")
                         startAudio(R.raw.pop_up)
-                        broadcastMsg(parsedMsg)
+                        broadcastMsg(parsedMsg, null)
                     }
 
                     if(msgToSend != null){
-                        val jsonString = Gson().toJson(msgToSend)
-                        outputStream.writeUTF(jsonString)
+                        if(bitmapToSend != null) msgToSend!!.hasImage = true
+                        val rawMsg = Gson().toJson(msgToSend)
+                        val encryptedMsg = AESHelper.encrypt(rawMsg, secretKey)
+                        outputStream.writeUTF(encryptedMsg)
                         outputStream.flush()
                         msgToSend = null
+
+                        if(bitmapToSend != null) {
+                            val stream = ByteArrayOutputStream()
+                            bitmapToSend!!.compress(Bitmap.CompressFormat.PNG, 0, stream)    // Comprimimos la imagen para enviar sus bytes por socket.
+                            val array = stream.toByteArray()
+                            outputStream.writeInt(array.size)
+                            outputStream.write(array,0,array.size)                              // Lo escribimos por el flujo de salida de datos.
+                            outputStream.flush()
+                            bitmapToSend = null                                                     // Reiniciamos el valor del bitmap
+                        }
+
                     }
                 }
             }catch (error : Exception) {
@@ -315,12 +418,18 @@ class MainActivity : AppCompatActivity() {
         fun sendMsg(msg: Message) {
             msgToSend = msg
         }
+
+        fun sendImage(image: Bitmap?) {
+            bitmapToSend = image
+        }
     }
 
-    private fun broadcastMsg(msg: Message) {
+    private fun broadcastMsg(msg: Message, image: Bitmap?) {
         for (i in 0 until usersList.size) {
-            if(usersList[i] != msg.client)
+            if(usersList[i] != msg.client) {
                 usersList[i].chatThread?.sendMsg(msg)
+                usersList[i].chatThread?.sendImage(image)
+            }
         }
         addMessageMainThread(msg)
     }
@@ -393,5 +502,13 @@ class MainActivity : AppCompatActivity() {
             if(grantResults.isNotEmpty() && allPerms)
                 startServer()
         }
+    }
+
+    private fun parseImageByteArray(byteArray : ByteArray?) : Drawable?{
+        if(byteArray != null) {
+            val bitmapReceived = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.size)
+            return BitmapDrawable(resources, bitmapReceived)
+        }
+        return null
     }
 }

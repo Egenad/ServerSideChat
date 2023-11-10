@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:orientation="horizontal"
     android:layout_gravity="bottom"
@@ -34,12 +35,28 @@
             android:layout_marginStart="10dp"
             android:layout_marginEnd="10dp"
             android:layout_marginBottom="5dp"
+            android:visibility="visible"
             android:textColor="@color/white"
             android:layout_width="match_parent"
-            android:gravity="end"
+            android:gravity="start"
             android:textSize="16sp"
             android:layout_height="wrap_content"
-            android:text="AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+            android:text=""
             android:layout_gravity="center"/>
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:id="@+id/constraint"
+            android:visibility="visible"
+            android:layout_height="200dp">
+            <ImageView android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:id="@+id/imageView"
+                android:scaleType="fitCenter"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:src="@drawable/testimg"
+                app:layout_constraintDimensionRatio="1:1"
+                android:contentDescription="@string/imgDsc" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
     </LinearLayout>
 </LinearLayout>

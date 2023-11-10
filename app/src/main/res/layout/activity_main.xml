@@ -86,8 +86,17 @@
             android:layout_weight="1"
             android:layout_width="0dip"
             android:layout_height="wrap_content"
+            android:visibility="gone"
             android:id="@+id/btnSend"
             android:contentDescription="@string/sendMsgDsc" />
+        <ImageButton
+            android:background="@drawable/sendmediaicon"
+            android:layout_weight="1"
+            android:layout_width="0dip"
+            android:visibility="visible"
+            android:layout_height="wrap_content"
+            android:id="@+id/btnMedia"
+            android:contentDescription="@string/sendMediaDsc" />
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

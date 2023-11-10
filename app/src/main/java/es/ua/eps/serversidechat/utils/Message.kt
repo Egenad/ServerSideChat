@@ -1,8 +1,8 @@
 package es.ua.eps.serversidechat.utils
 
+import android.graphics.drawable.Drawable
 import es.ua.eps.serversidechat.adapter.OUT_MESSAGE
 import java.util.Date
-import java.util.UUID
 
 class Message {
 
@@ -12,5 +12,6 @@ class Message {
     var color: String = "#7F92FB"
     var content: String? = null
     var client : Client? = null
-
+    var image : Drawable? = null
+    var hasImage : Boolean = false
 }

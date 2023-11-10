@@ -29,7 +29,11 @@ class MessageListFragment : Fragment() {
 
         binding = MessageListRecycledBinding.inflate(layoutInflater, container, false)
 
-        binding.list.layoutManager = LinearLayoutManager(activity as AppCompatActivity?)
+        val linearManager = LinearLayoutManager(activity as AppCompatActivity?)
+        linearManager.stackFromEnd = true
+        linearManager.reverseLayout = false
+
+        binding.list.layoutManager = linearManager
         binding.list.itemAnimator = DefaultItemAnimator()
         val recyclerAdapter = RecycledAdapter(MessageChatData.messages)
         binding.list.adapter = recyclerAdapter
@@ -39,6 +43,7 @@ class MessageListFragment : Fragment() {
 
     fun notifyItemInserted(){
         binding.list.adapter?.notifyItemInserted(MessageChatData.messages.size - 1)
+        binding.list.smoothScrollToPosition(MessageChatData.messages.size - 1)
     }
 
     fun notifyItemModified(position: Int){

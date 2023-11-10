@@ -2,9 +2,17 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
+    android:orientation="horizontal"
+    android:layout_gravity="bottom"
+    android:gravity="start"
+    android:paddingTop="5dp"
+    android:layout_marginEnd="40dp"
+    android:layout_marginStart="10dp"
+    android:layout_height="wrap_content">
+    <!-- android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginStart="8dp"
-    android:layout_marginTop="16dp">
+    android:layout_marginTop="16dp"-->
     <androidx.cardview.widget.CardView
         android:id="@+id/card_gchat_message_other"
         android:layout_width="wrap_content"
@@ -19,11 +27,15 @@
             android:id="@+id/body"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="0dp"
+            android:layout_marginStart="5dp"
+            android:layout_gravity="start"
+            android:layout_marginEnd="5dp"
             android:background="@drawable/rectangle"
             android:orientation="vertical">
             <TextView
                 android:id="@+id/author"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Author"
                 android:layout_marginBottom="3dp"
@@ -35,15 +47,36 @@
                 android:textSize="16sp" />
             <TextView
                 android:id="@+id/content"
-                android:layout_width="wrap_content"
+                android:layout_marginTop="5dp"
+                android:layout_marginStart="0dp"
+                android:layout_marginEnd="10dp"
+                android:layout_marginBottom="5dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
                 android:maxWidth="260dp"
                 android:paddingLeft="12dp"
                 android:paddingRight="12dp"
-                android:text="AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+                android:text="asdasdasdasdasdasd"
                 android:textColor="@color/white"
                 android:textSize="16sp" />
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:visibility="visible"
+                android:id="@+id/constraint"
+                android:layout_height="200dp">
+                <ImageView android:layout_width="match_parent"
+                    android:id="@+id/imageView"
+                    app:layout_constraintWidth_max="280dp"
+                    android:layout_height="match_parent"
+                    android:scaleType="fitCenter"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    android:src="@drawable/testimg"
+                    app:layout_constraintDimensionRatio="1:1"
+                    android:contentDescription="@string/imgDsc" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
         </LinearLayout>
     </androidx.cardview.widget.CardView>
     <TextView
