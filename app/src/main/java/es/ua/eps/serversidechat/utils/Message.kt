@@ -14,4 +14,16 @@ class Message {
     var client : Client? = null
     var image : Drawable? = null
     var hasImage : Boolean = false
+
+    constructor()
+
+    constructor(message : Message){
+        authorName = message.authorName
+        date = message.date
+        type = message.type
+        color = message.color
+        content = message.content
+        hasImage = message.hasImage
+        image = message.image
+    }
 }

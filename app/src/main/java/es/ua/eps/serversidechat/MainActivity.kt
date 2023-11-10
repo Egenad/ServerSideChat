@@ -18,6 +18,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.toBitmap
 import androidx.core.widget.doOnTextChanged
 import com.google.gson.Gson
 import es.ua.eps.serversidechat.adapter.OUT_MESSAGE
@@ -62,6 +63,8 @@ class MainActivity : AppCompatActivity() {
     private var mediaPlayer : MediaPlayer? = null                   // Clase que nos permite lanzar eventos de sonido
 
     private val serverClient : Client = Client()                    // Objeto de tipo Cliente que tiene dentro el nombre del servidor
+
+    private val colorArray = arrayOf("#FF5733", "#FFCE33", "#33FF8D", "#FF33CA", "#FFAF33")
 
     private val startForResult =
         registerForActivityResult(
@@ -293,17 +296,33 @@ class MainActivity : AppCompatActivity() {
 
                     // Creamos un cliente nuevo y enviamos una respuesta utilizando el socket aceptado.
                     val newClient = Client()
-                    usersList.add(newClient)
+                    usersList.add(newClient)                                                        // Añadimos el nuevo cliente a la lista de usuarios conectados.
 
-                    updateHUD()
+                    var index = usersList.size - 1                                                  // Asignamos el color del cliente.
+                    while(index > colorArray.size){
+                        index /= colorArray.size
+                    }
+                    newClient.color = colorArray[index]
 
-                    ConnectionThread(newClient, socket).start()
+                    updateHUD()                                                                     // Actualizamos el HUD para desplegar el chat
+                    ConnectionThread(newClient, socket).start()                                     // Lanzamos el hilo del cliente.
 
                 }
             }catch (error : IOException){
                 Log.e(PACKAGE_NAME, error.stackTraceToString())
             }
         }
+    }
+
+    private fun sendUserListMessage(){
+
+        var completeList = "UserList: "
+
+        for (i in 0 until usersList.size) {
+            completeList += usersList[i].name + ", "
+        }
+
+        broadcastStringMsg(completeList.replace(Regex(", \\z"), ""))
     }
 
     /**
@@ -315,6 +334,7 @@ class MainActivity : AppCompatActivity() {
         private val connectedClient = client
 
         private var msgToSend : Message? = null
+        private var msgStringToSend : String? = null
         private var bitmapToSend : Bitmap? = null
 
         init {
@@ -352,28 +372,41 @@ class MainActivity : AppCompatActivity() {
 
                 Log.i(PACKAGE_NAME, "AES Key: $secretKey")
 
+                // Enviamos mensaje a todos los clientes con la lista de usuarios actualizada.
+                sendUserListMessage()
+
                 while(true){
                     if(inputStream.available() > 0){
                         val receivedMsg = inputStream.readUTF()
                         val decryptedMsg = AESHelper.decrypt(receivedMsg, secretKey)
                         val parsedMsg = Gson().fromJson(decryptedMsg, Message::class.java)
                         parsedMsg.client = connectedClient
+                        parsedMsg.color = connectedClient.color ?: "#7F92FB"
 
                         if(parsedMsg.hasImage){
                             val len = inputStream.readInt()
                             val data = ByteArray(len)
                             inputStream.readFully(data, 0, data.size)
-                            parsedMsg.image = parseImageByteArray(data)                             // Obtenemos el Drawable a mostrar a partir del bitmap
+                            parsedMsg.hasImage = true
+                            parsedMsg.image = parseImageByteArray(AESHelper.decrypt(data, secretKey)) // Obtenemos el Drawable a mostrar a partir del bitmap
                         }
 
                         Log.i(PACKAGE_NAME, "Message received: $receivedMsg")
                         startAudio(R.raw.pop_up)
-                        broadcastMsg(parsedMsg, null)
+                        broadcastMsg(parsedMsg, parsedMsg.image?.toBitmap())
                     }
 
-                    if(msgToSend != null){
+                    if(msgStringToSend != null){                                                    // Comprobamos si hay mensajes simples informativos para enviar
+                        val encryptedMsg = AESHelper.encrypt(msgStringToSend!!, secretKey)
+                        outputStream.writeUTF(encryptedMsg)
+                        outputStream.flush()
+                        msgStringToSend = null
+                    }
+
+                    if(msgToSend != null){                                                          // Comprobamos si hay mensajes por parte del propio server u otros clientes por enviar
                         if(bitmapToSend != null) msgToSend!!.hasImage = true
-                        val rawMsg = Gson().toJson(msgToSend)
+                        val newMsg = Message(msgToSend!!)
+                        val rawMsg = Gson().toJson(newMsg)
                         val encryptedMsg = AESHelper.encrypt(rawMsg, secretKey)
                         outputStream.writeUTF(encryptedMsg)
                         outputStream.flush()
@@ -382,7 +415,7 @@ class MainActivity : AppCompatActivity() {
                         if(bitmapToSend != null) {
                             val stream = ByteArrayOutputStream()
                             bitmapToSend!!.compress(Bitmap.CompressFormat.PNG, 0, stream)    // Comprimimos la imagen para enviar sus bytes por socket.
-                            val array = stream.toByteArray()
+                            val array = AESHelper.encrypt(stream.toByteArray(), secretKey)
                             outputStream.writeInt(array.size)
                             outputStream.write(array,0,array.size)                              // Lo escribimos por el flujo de salida de datos.
                             outputStream.flush()
@@ -416,7 +449,12 @@ class MainActivity : AppCompatActivity() {
         }
 
         fun sendMsg(msg: Message) {
+            msg.image = null
             msgToSend = msg
+        }
+
+        fun sendStringMsg(msg: String) {
+            msgStringToSend = msg
         }
 
         fun sendImage(image: Bitmap?) {
@@ -425,13 +463,23 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun broadcastMsg(msg: Message, image: Bitmap?) {
+
+        val newMsg = Message(msg)
+
         for (i in 0 until usersList.size) {
             if(usersList[i] != msg.client) {
                 usersList[i].chatThread?.sendMsg(msg)
                 usersList[i].chatThread?.sendImage(image)
             }
         }
-        addMessageMainThread(msg)
+
+        addMessageMainThread(newMsg)
+    }
+
+    private fun broadcastStringMsg(msg : String) {
+        for (i in 0 until usersList.size) {
+            usersList[i].chatThread?.sendStringMsg(msg)
+        }
     }
 
     private fun updateHUD(){

@@ -41,4 +41,18 @@ object AESHelper {
         val decrypt = cipher.doFinal(textToDecrypt)
         return String(decrypt)
     }
+
+    @Throws(Exception::class)
+    fun encrypt(Data: ByteArray, secretKey : SecretKey): ByteArray {
+        val c = Cipher.getInstance("AES/ECB/PKCS7PADDING")
+        c.init(Cipher.ENCRYPT_MODE, secretKey)
+        return c.doFinal(Data)
+    }
+
+    @Throws(Exception::class)
+    fun decrypt(Data: ByteArray, secretKey : SecretKey): ByteArray {
+        val c = Cipher.getInstance("AES/ECB/PKCS7PADDING")
+        c.init(Cipher.DECRYPT_MODE, secretKey)
+        return c.doFinal(Data)
+    }
 }
